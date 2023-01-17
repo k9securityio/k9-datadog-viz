@@ -1,0 +1,38 @@
+# Distribution / packaging
+.Python
+env/
+venv
+venv/
+venv-dev/
+venv-policy-gen/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.idea/
+.coverage
+*.test-report.xml
+tests/results/
+k9-backend.iml
+
+# Serverless directories
+.serverless/
+
+# Python artifacts
+__pycache__/
+node_modules/
+
+# Miscellaneous
+*.out
+/tests/integration/test_aws_resource_access_auditor.debug-data.log
+/tests/integration/tests.integration.test_aws_resource_access_auditor.debug-data.log
