@@ -1,0 +1,178 @@
+{
+  "id": "-D4J40aCQLefllk8y9Rh9w",
+  "type": "pipeline",
+  "name": "k9-reports - latest",
+  "is_enabled": true,
+  "is_read_only": false,
+  "filter": {
+    "query": "host:(\"arn:aws:s3:::k9-reports-dev\" OR \"arn:aws:s3:::qm-dev-k9-reports\")"
+  },
+  "processors": [
+    {
+      "name": "Parse filename metadata - latest",
+      "is_enabled": true,
+      "source": "aws.s3.key",
+      "samples": [
+        "customers/C10001/reports/aws/139710491120/latest/principal-access-summaries.latest.csv",
+        "customers/C10001/reports/aws/139710491120/latest/resource-access-summaries.latest.csv",
+        "customers/C10001/reports/aws/139710491120/latest/principals.latest.csv"
+      ],
+      "grok": {
+        "support_rules": "",
+        "match_rules": "parse_filename_metadata customers/%{word:k9.customer.id}/reports/aws/%{number:aws.account.id}/latest/%{notSpace:k9.report.type}\\.latest\\.%{word:k9.file.type}"
+      },
+      "type": "grok-parser"
+    },
+    {
+      "name": "Set analysis_time k9 report attribute to official timestamp",
+      "is_enabled": true,
+      "sources": [
+        "analysis_time"
+      ],
+      "type": "date-remapper"
+    },
+    {
+      "name": "Set service to k9",
+      "is_enabled": true,
+      "template": "k9",
+      "target": "service",
+      "is_replace_missing": true,
+      "type": "string-builder-processor"
+    },
+    {
+      "name": "Remap service to k9",
+      "is_enabled": true,
+      "sources": [
+        "service"
+      ],
+      "type": "service-remapper"
+    },
+    {
+      "type": "pipeline",
+      "name": "Filter principal access summaries",
+      "is_enabled": true,
+      "filter": {
+        "query": "@k9.report.type:\"principal-access-summaries\""
+      },
+      "processors": [
+        {
+          "name": "Parse principal_tags",
+          "is_enabled": true,
+          "source": "principal_access_summary.principal_tags",
+          "samples": [
+            "{\"k9security:analysis\": \"include\"}"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "principal_tag_rule %{data:principal_access_summary.principal_tags:json}"
+          },
+          "type": "grok-parser"
+        },
+        {
+          "name": "Parse principal access summary",
+          "is_enabled": true,
+          "source": "message",
+          "samples": [
+            "2022-12-21T07:15:36.947776+00:00,ci,arn:aws:iam::139710491120:user/ci,IAMUser,\"{\"\"BusinessUnit\"\": \"\"ProductDevelopment\"\"}\",Athena,administer-resource,",
+            "2022-12-21T07:15:36.947776+00:00,ci,arn:aws:iam::139710491120:user/ci,IAMUser,\"{\"\"BusinessUnit\"\": \"\"ProductDevelopment\"\"}\",DynamoDB Accelerator (DAX),administer-resource,\n",
+            "2022-12-21T07:15:36.947776+00:00,ci,arn:aws:iam::139710491120:user/ci,IAMUser,\"{\"\"BusinessUnit\"\": \"\"ProductDevelopment\"\"}\",STS,use-resource,arn:aws:iam::139710491120:role/DatadogIntegrationRole"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "k9_principal_access_summary_rule %{data:principal_access_summary:csv(\"analysis_time,principal_name,principal_arn,principal_type,principal_tags,service_name,access_capability,resource_arn\")}"
+          },
+          "type": "grok-parser"
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "Filter principals summary",
+      "is_enabled": true,
+      "filter": {
+        "query": "@k9.report.type:\"principals\""
+      },
+      "processors": [
+        {
+          "name": "Parse principal summary",
+          "is_enabled": true,
+          "source": "message",
+          "samples": [
+            "2022-12-10T07:14:19.753800+00:00,ci,arn:aws:iam::139710491120:user/ci,IAMUser,True,2022-12-10 05:03:00+00:00,ProductDevelopment,,,\"{\"\"BusinessUnit\"\": \"\"ProductDevelopment\"\"}\",,,,2022-12-10 05:03:00+00:00,2021-03-08 21:03:09+00:00,Active,,,\n",
+            "2022-12-10T07:14:19.753800+00:00,AWSReservedSSO_AdministratorAccess_437be9d757c9ea2f,arn:aws:iam::139710491120:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_437be9d757c9ea2f,IAMRole,True,2022-07-21 15:30:39+00:00,,,,{},,,,,,,,,",
+            "2022-12-10T07:14:19.753800+00:00,datadog-ForwarderStack-1OV25NQJZ3PDG-ForwarderRole-1X48OL78SFSGB,arn:aws:iam::139710491120:role/datadog-ForwarderStack-1OV25NQJZ3PDG-ForwarderRole-1X48OL78SFSGB,IAMRole,False,2022-12-10 05:24:59+00:00,,,,\"{\"\"dd_forwarder_version\"\": \"\"3.40.0\"\"}\",,,,,,,,,"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "k9_principals_summary_rule %{data:principal_summary:csv(\"analysis_time,principal_name,principal_arn,principal_type,principal_is_iam_admin,principal_last_used,principal_tag_business_unit,principal_tag_environment,principal_tag_used_by,principal_tags,password_last_used,password_last_rotated,password_state,access_key_1_last_used,access_key_1_last_rotated,access_key_1_state,access_key_2_last_used,access_key_2_last_rotated,access_key_2_state\")}"
+          },
+          "type": "grok-parser"
+        },
+        {
+          "name": "Parse principal_tags",
+          "is_enabled": true,
+          "source": "principal_access_summary.principal_tags",
+          "samples": [
+            "{\"k9security:analysis\": \"include\"}",
+            "{\"k9security:analysis\": \"include\", \"STAGE\": \"dev\"}"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "principal_tag_rule %{data:principal_summary.principal_tags:json}"
+          },
+          "type": "grok-parser"
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "Filter resource access summaries",
+      "is_enabled": true,
+      "filter": {
+        "query": "@k9.report.type:\"resource-access-summaries\""
+      },
+      "processors": [
+        {
+          "name": "Parse resource access summary",
+          "is_enabled": true,
+          "source": "message",
+          "samples": [
+            "2022-12-21T07:15:36.947776+00:00,DynamoDB,TerraformStateLock,arn:aws:dynamodb:us-east-1:139710491120:table/TerraformStateLock,administer-resource,IAMUser,ci,arn:aws:iam::139710491120:user/ci,",
+            "2022-12-21T07:15:36.947776+00:00,DynamoDB,aws-mp-metering-records-dev-skuenzli,arn:aws:dynamodb:us-east-1:139710491120:table/aws-mp-metering-records-dev-skuenzli,administer-resource,IAMUser,ci,arn:aws:iam::139710491120:user/ci,",
+            "2022-12-21T07:15:36.947776+00:00,KMS,alias/k9-cdk-integration-test,arn:aws:kms:us-east-1:139710491120:key/a71d41d3-d7f2-4829-9d0c-8d527e366a9a,administer-resource,IAMUser,ci,arn:aws:iam::139710491120:user/ci,"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "k9_resource_access_summary_rule %{data:resource_access_summary:csv(\"analysis_time,service_name,resource_name,resource_arn,access_capability,principal_type,principal_name,principal_arn,resource_tag_confidentiality\")}"
+          },
+          "type": "grok-parser"
+        }
+      ]
+    },
+    {
+      "type": "pipeline",
+      "name": "Filter resources summary",
+      "is_enabled": true,
+      "filter": {
+        "query": "@k9.report.type:\"resources\""
+      },
+      "processors": [
+        {
+          "name": "Parse resources",
+          "is_enabled": true,
+          "source": "message",
+          "samples": [
+            "2023-01-13T13:14:19.753800+00:00,AccountAdminAccessRole-Sandbox,arn:aws:iam::139710491120:role/AccountAdminAccessRole-Sandbox,IAMRole,,,,,,,{}",
+            "2023-01-13T13:14:19.753800+00:00,qm-dev-k9-reports,arn:aws:s3:::qm-dev-k9-reports,S3Bucket,,dev,product,,,,\"{'Owner': 'product', 'ManagedBy': 'Terraform', 'Environment': 'dev', 'Application': 'k9', 'Name': 'qm-dev-k9-reports'}\"",
+            "2023-01-13T13:14:19.753800+00:00,int-test-pg-01,arn:aws:rds:us-east-1:139710491120:cluster:int-test-pg-01,RDSCluster,,,,,,,{}"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "k9_resource_access_summary_rule %{data:resources:csv(\"analysis_time,resource_name,resource_arn,resource_type,resource_tag_business_unit,resource_tag_environment,resource_tag_owner,resource_tag_confidentiality,resource_tag_integrity,resource_tag_availability,resource_tags\")}"
+          },
+          "type": "grok-parser"
+        }
+      ]
+    }
+  ]
+}
