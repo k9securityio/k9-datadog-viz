@@ -56,19 +56,6 @@
       },
       "processors": [
         {
-          "name": "Parse principal_tags",
-          "is_enabled": true,
-          "source": "principal_access_summary.principal_tags",
-          "samples": [
-            "{\"k9security:analysis\": \"include\"}"
-          ],
-          "grok": {
-            "support_rules": "",
-            "match_rules": "principal_tag_rule %{data:principal_access_summary.principal_tags:json}"
-          },
-          "type": "grok-parser"
-        },
-        {
           "name": "Parse principal access summary",
           "is_enabled": true,
           "source": "message",
@@ -80,6 +67,19 @@
           "grok": {
             "support_rules": "",
             "match_rules": "k9_principal_access_summary_rule %{data:principal_access_summary:csv(\"analysis_time,principal_name,principal_arn,principal_type,principal_tags,service_name,access_capability,resource_arn\")}"
+          },
+          "type": "grok-parser"
+        },
+        {
+          "name": "Parse principal_tags",
+          "is_enabled": true,
+          "source": "principal_access_summary.principal_tags",
+          "samples": [
+            "{\"k9security:analysis\": \"include\"}"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "principal_tag_rule %{data:principal_access_summary.principal_tags:json}"
           },
           "type": "grok-parser"
         }
@@ -111,14 +111,14 @@
         {
           "name": "Parse principal_tags",
           "is_enabled": true,
-          "source": "principal_access_summary.principal_tags",
+          "source": "principal_summary.principal_tags",
           "samples": [
             "{\"k9security:analysis\": \"include\"}",
             "{\"k9security:analysis\": \"include\", \"STAGE\": \"dev\"}"
           ],
           "grok": {
             "support_rules": "",
-            "match_rules": "principal_tag_rule %{data:principal_summary.principal_tags:json}"
+            "match_rules": "principal_tags_rule %{data:principal_summary.principal_tags:json}"
           },
           "type": "grok-parser"
         }
@@ -168,7 +168,21 @@
           ],
           "grok": {
             "support_rules": "",
-            "match_rules": "k9_resource_access_summary_rule %{data:resources:csv(\"analysis_time,resource_name,resource_arn,resource_type,resource_tag_business_unit,resource_tag_environment,resource_tag_owner,resource_tag_confidentiality,resource_tag_integrity,resource_tag_availability,resource_tags\")}"
+            "match_rules": "k9_resource_summary_rule %{data:resource_summary:csv(\"analysis_time,resource_name,resource_arn,resource_type,resource_tag_business_unit,resource_tag_environment,resource_tag_owner,resource_tag_confidentiality,resource_tag_integrity,resource_tag_availability,resource_tags\")}"
+          },
+          "type": "grok-parser"
+        },
+        {
+          "name": "Parse resource_tags",
+          "is_enabled": true,
+          "source": "resource_summary.resource_tags",
+          "samples": [
+            "{\"k9security:analysis\": \"include\"}",
+            "{\"k9security:analysis\": \"include\", \"STAGE\": \"dev\"}"
+          ],
+          "grok": {
+            "support_rules": "",
+            "match_rules": "resource_tags_rule %{data:resource_summary.resource_tags:json}"
           },
           "type": "grok-parser"
         }
