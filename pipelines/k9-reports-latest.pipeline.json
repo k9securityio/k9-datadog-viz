@@ -24,14 +24,6 @@
       "type": "grok-parser"
     },
     {
-      "name": "Set analysis_time k9 report attribute to official timestamp",
-      "is_enabled": true,
-      "sources": [
-        "analysis_time"
-      ],
-      "type": "date-remapper"
-    },
-    {
       "name": "Set service to k9",
       "is_enabled": true,
       "template": "k9",
@@ -82,6 +74,14 @@
             "match_rules": "principal_tag_rule %{data:principal_access_summary.principal_tags:json}"
           },
           "type": "grok-parser"
+        },
+        {
+          "name": "Set analysis_time k9 report attribute to official timestamp",
+          "is_enabled": true,
+          "sources": [
+            "principal_access_summary.analysis_time"
+          ],
+          "type": "date-remapper"
         }
       ]
     },
@@ -121,6 +121,14 @@
             "match_rules": "principal_tags_rule %{data:principal_summary.principal_tags:json}"
           },
           "type": "grok-parser"
+        },
+        {
+          "name": "Set analysis_time k9 report attribute to official timestamp",
+          "is_enabled": true,
+          "sources": [
+            "principal_summary.analysis_time"
+          ],
+          "type": "date-remapper"
         }
       ]
     },
@@ -146,6 +154,14 @@
             "match_rules": "k9_resource_access_summary_rule %{data:resource_access_summary:csv(\"analysis_time,service_name,resource_name,resource_arn,access_capability,principal_type,principal_name,principal_arn,resource_tag_confidentiality\")}"
           },
           "type": "grok-parser"
+        },
+        {
+          "name": "Set analysis_time k9 report attribute to official timestamp",
+          "is_enabled": true,
+          "sources": [
+            "resource_access_summary.analysis_time"
+          ],
+          "type": "date-remapper"
         }
       ]
     },
@@ -185,6 +201,14 @@
             "match_rules": "resource_tags_rule %{data:resource_summary.resource_tags:json}"
           },
           "type": "grok-parser"
+        },
+        {
+          "name": "Set analysis_time k9 report attribute to official timestamp",
+          "is_enabled": true,
+          "sources": [
+            "resource_summary.analysis_time"
+          ],
+          "type": "date-remapper"
         }
       ]
     }
