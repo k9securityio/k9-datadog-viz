@@ -1,11 +1,8 @@
 {
-  "id": "-D4J40aCQLefllk8y9Rh9w",
-  "type": "pipeline",
   "name": "k9-reports - latest",
   "is_enabled": true,
-  "is_read_only": false,
   "filter": {
-    "query": "host:(\"arn:aws:s3:::k9-reports-dev\" OR \"arn:aws:s3:::qm-dev-k9-reports\")"
+    "query": "host:(\"arn:aws:s3:::CHANGE-TO-YOUR-SECURE-INBOX\")"
   },
   "processors": [
     {
