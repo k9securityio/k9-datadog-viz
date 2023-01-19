@@ -2,7 +2,7 @@
 
 This repo contains the k9 Security Datadog integration tools.
 
-These tools help you load the k9 Security csv files into Datadog for viewing in the k9 Security dashboard:
+These tools help you load the k9 Security csv files into Datadog for visualization in the k9 Security dashboard:
 
 ![k9 Security Daily IAM Access Review for Datadog](assets/k9security-daily-review.dashboard.png)
 
